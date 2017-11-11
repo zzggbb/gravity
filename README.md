@@ -2,6 +2,16 @@
 
 This is a 2 dimensional simulator of the forces of gravity.
 
+### Getting Started
+
+```
+$ git clone https://github.com/zzggbb/gravity
+$ cd gravity
+$ python3 -m virtualenv .
+$ pip install -r requirements.txt
+$ python3 gravity.py
+```
+
 ### Features
 * play/pause the simulation
 * seek forwards/backwards in time
