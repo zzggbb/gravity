@@ -7,6 +7,9 @@ class Body(object):
         self.velocity = velocity
         self.acceleration = acceleration
 
+    def momentum(self):
+        return self.mass * self.velocity
+
     def update(self, t):
         self.velocity += self.acceleration * t
         self.position += self.velocity * t
@@ -19,6 +22,12 @@ class Body(object):
         top = self.position.y - self.radius
         width = height = 2 * self.radius
         return (left, top, width, height)
+
+    def __hash__(self):
+        return hash(tuple(self.position))
+
+    def __eq__(self, other):
+        return self.position == other.position
 
     def __str__(self):
         return "mass: {}, radius: {}, p: {}, v: {}, a: {}".format(

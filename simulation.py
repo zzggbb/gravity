@@ -12,9 +12,11 @@ class Simulation(object):
         self.WINDOW = (1920,1080)
         self.color = {
             'background': (0x00,0x00,0x00),
-            'object': (0x00, 0xbc, 0xd4),
+            'body': (0x00, 0xbc, 0xd4),
             'acceleration': (0xff, 0xeb, 0x3b),
-            'velocity': (0x4c, 0xaf, 0x50)
+            'velocity': (0x4c, 0xaf, 0x50),
+            'collision': (0xe0,66,66),
+            'white': (0xff, 0xff, 0xff)
         }
         self.display = {
             'acceleration': True,
@@ -25,26 +27,40 @@ class Simulation(object):
         self.clock = pg.time.Clock()
         self.running = True
         self.paused = False
-        self.bodies = []
+        self.bodies = {}
 
         self.surface.set_colorkey(self.color['background'])
 
+    def collide(self, bodyA, bodyB):
+        m_prime = bodyA.mass + bodyB.mass
+        v_prime = (bodyA.momentum() + bodyB.momentum()) / m_prime
+        self.kill(bodyB.position)
+        bodyA.velocity = v_prime
+        bodyA.mass = m_prime
+
     def updateAcceleration(self, body):
         sum = Vector(0,0)
-        for other in self.bodies:
-            if other == body:
+        for position, other in self.bodies.copy().items():
+            if position.near(body.position):
                 continue
 
-            diff = other.position - body.position
-            dist_3 = body.distance(other) ** 3.0
+            diff = position - body.position
+            distance = diff.magnitude()
+
+            if distance < body.radius + other.radius:
+                self.collide(body, other)
+
+            dist_3 = distance ** 3.0
             sum += (other.mass / dist_3) * diff
 
         body.acceleration = self.GRAVITATION * sum
 
-    def removeBody(self, pos):
-        for body in self.bodies:
-            if body.position.distance(pos) < body.radius:
-                self.bodies.remove(body)
+    def spawn(self, body):
+        self.bodies[body.position] = body
+
+    def kill(self, position):
+        if position in self.bodies:
+            del self.bodies[position]
 
     def processEvents(self):
         for event in pg.event.get():
@@ -57,10 +73,15 @@ class Simulation(object):
 
                 if event.key == pg.K_n:
                     pos = pg.mouse.get_pos()
-                    self.bodies.append(Body(
-                        self.color['object'], 10**6, 10, Vector(*pos),
-                        Vector(0,0), Vector(0,0)
-                    ))
+                    body = Body(self.color['body'], 10**6, 10, Vector(*pos),
+                                Vector(0,0), Vector(0,0))
+                    self.spawn(body)
+
+                if event.key == pg.K_s:
+                    mouse_pos = Vector(*pg.mouse.get_pos())
+                    body = Body(self.color['white'], 10**9, 10, mouse_pos,
+                                Vector(0,0), Vector(0,0))
+                    self.spawn(body)
 
                 if event.key == pg.K_q:
                     self.running = False
@@ -69,33 +90,37 @@ class Simulation(object):
                     self.display['velocity'] = not self.display['velocity']
 
                 if event.key == pg.K_x:
-                    pos = pg.mouse.get_pos()
-                    self.removeBody(Vector(*pos))
+                    mouse_pos = Vector(*pg.mouse.get_pos())
+                    for position, body in self.bodies.copy().items():
+                        if mouse_pos.distance(position) < body.radius:
+                            self.kill(position)
 
     def update(self):
         dt = self.clock.tick_busy_loop(self.FRAMERATE) / 1000.0
         self.processEvents()
 
         self.surface.fill(self.color['background'])
-        for body in self.bodies:
+        for position, body in self.bodies.copy().items():
             if not self.paused:
+                self.kill(position)
                 body.update(dt)
+                self.spawn(body)
 
             if self.display['acceleration']:
                 pg.draw.line(self.surface,
                              self.color['acceleration'],
-                             tuple(body.position),
-                             tuple(body.position + body.acceleration))
+                             tuple(position),
+                             tuple(position + body.acceleration))
 
             if self.display['velocity']:
                 pg.draw.line(self.surface,
                              self.color['velocity'],
-                             tuple(body.position),
-                             tuple(body.position + body.velocity))
+                             tuple(position),
+                             tuple(position + body.velocity))
 
             self.updateAcceleration(body)
             pg.draw.circle(self.surface, body.color,
-                           tuple(body.position), body.radius)
+                           tuple(position), body.radius)
 
         pg.display.flip()
 
