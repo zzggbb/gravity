@@ -1,4 +1,5 @@
-![gravity.png](gravity.png)
+![before.png](before.png)
+![after.png](after.png)
 
 This is a 2 dimensional simulator of the forces of gravity.
 
@@ -14,7 +15,7 @@ $ pip install -r requirements.txt
 
 To run the simulation:
 ```
-$ python3 gravity.py
+$ python3 main.py
 ```
 
 To leave the virtual env:
@@ -62,7 +63,7 @@ For each frame, the simulation must calculate the acceleration
 caused by the force of gravity between each mass.
 
 Here is one approach to this problem:
-```
+```python
 for body in bodies:
     sum = Vector(0,0)
     for other in bodies:
@@ -79,4 +80,7 @@ for body in bodies:
 However, this approach calculates twice as many accelerations
 as are necessary. The acceleration on an object A due to another
 object B is equal in magnitude and opposite in direction to the
-acceleration on object B due to object A.
+acceleration on object B due to object A. Therefore we cache
+the results from each calculation and check this cache before
+performing any calculation. This avoids doing unnecessary
+calculations, but we are still stuck with a bad (n^2) runtime.
