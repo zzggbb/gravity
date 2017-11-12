@@ -1,5 +1,5 @@
-![before.png](before.png)
-![after.png](after.png)
+![before.png](images/before.png)
+![after.png](images/after.png)
 
 This is a 2 dimensional simulator of the forces of gravity.
 
@@ -77,10 +77,18 @@ for body in bodies:
     body.acceleration = GRAVITATION * sum
 ```
 
-However, this approach calculates twice as many accelerations
-as are necessary. The acceleration on an object A due to another
+However, this approach does twice as many calculations as
+necessary. The force on an object A due to another
 object B is equal in magnitude and opposite in direction to the
-acceleration on object B due to object A. Therefore we cache
-the results from each calculation and check this cache before
-performing any calculation. This avoids doing unnecessary
-calculations, but we are still stuck with a bad (n^2) runtime.
+force on B due to A. Therefore we could cache each calculation
+and check this cache before performing any calculation. This
+avoids unnecessary calculations, but we are still stuck with the
+runtime of `n^2`.
+
+Another approach to this problem comes from the observation
+that after doing `n` calculations for a body, we can do `n-1`
+calculations for the next body. Here's a diagram:
+
+![force_calculations.png](images/force_calculations.png)
+
+This approach has a runtime of `n(n-1)/2`.
