@@ -47,10 +47,36 @@ vectors
 | key | action |
 | - | - |
 |space | toggle play/pause |
-|a | add object |
+|a | toggle display of acceleration vector |
 |b | seek backwards |
 |c | toggle collision type |
-|d | toggle acceleration and velocity vectors |
 |e | edit object properties |
 |f | seek forwards |
-|x | remove object |
+|n | new object at mouse position |
+|q | quit the simulation |
+|v | toggle display of velocity vector |
+|x | remove object at mouse position |
+
+### Acceleration Calculation
+For each frame, the simulation must calculate the acceleration
+caused by the force of gravity between each mass.
+
+Here is one approach to this problem:
+```
+for body in bodies:
+    sum = Vector(0,0)
+    for other in bodies:
+        if other == body:
+            continue
+
+        diff = other.position - body.position
+        dist_3 = (diff.x**2 + diff.y**2)**(3.0/2.0)
+        sum += (other.mass / dist_3) * diff
+
+    body.acceleration = GRAVITATION * sum
+```
+
+However, this approach calculates twice as many accelerations
+as are necessary. The acceleration on an object A due to another
+object B is equal in magnitude and opposite in direction to the
+acceleration on object B due to object A.
